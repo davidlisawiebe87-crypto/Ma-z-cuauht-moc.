@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#183b2b">
+  <meta name="description" content="Instala la aplicación Maíz Cuauhtémoc en tu teléfono.">
+  <title>Instalar Maíz Cuauhtémoc</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <style>
+    :root {
+      color-scheme: light;
+      --green: #183b2b;
+      --green-soft: #e6efe9;
+      --gold: #f0c847;
+      --bg: #f4f7f3;
+      --text: #17201b;
+      --muted: #5f6b63;
+      --border: #d8e1da;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 22px;
+    }
+    main {
+      width: min(100%, 520px);
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 28px 22px;
+      box-shadow: 0 16px 45px rgba(24, 59, 43, .10);
+      text-align: center;
+    }
+    .logo {
+      width: 104px;
+      height: 104px;
+      border-radius: 25px;
+      display: block;
+      margin: 0 auto 18px;
+    }
+    h1 { margin: 0; font-size: 1.8rem; }
+    .lead { color: var(--muted); margin: 10px auto 22px; max-width: 38ch; }
+    .features {
+      display: grid;
+      gap: 10px;
+      text-align: left;
+      margin: 0 0 24px;
+      padding: 0;
+      list-style: none;
+    }
+    .features li {
+      background: var(--green-soft);
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+    button, .link-button {
+      width: 100%;
+      min-height: 54px;
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font: inherit;
+      font-weight: 750;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    #installBtn { background: var(--green); color: white; }
+    #installBtn:disabled { cursor: wait; opacity: .58; }
+    .link-button { background: var(--gold); color: #1d281f; }
+    .instructions {
+      margin-top: 20px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      text-align: left;
+      color: var(--muted);
+    }
+    .instructions strong { color: var(--text); }
+    .status { min-height: 24px; margin: 14px 0 0; color: var(--muted); }
+    .success { color: #176b3a; font-weight: 700; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <main>
+    <img class="logo" src="/icon-192.png" alt="Ícono de Maíz Cuauhtémoc">
+    <h1>Instalar Maíz Cuauhtémoc</h1>
+    <p class="lead">Precio del maíz amarillo, dólar, clima y novedades, como una aplicación en tu pantalla principal.</p>
+
+    <ul class="features">
+      <li>✓ Se abre como aplicación, sin la barra del navegador.</li>
+      <li>✓ Acceso directo desde la pantalla del teléfono.</li>
+      <li>✓ La información se actualiza al abrirla.</li>
+    </ul>
+
+    <button id="installBtn" type="button" disabled>Preparando instalación…</button>
+    <a class="link-button" href="/">Abrir la aplicación</a>
+    <p id="status" class="status" aria-live="polite"></p>
+
+    <div id="fallback" class="instructions hidden">
+      <strong>Cuando no aparezca el botón:</strong>
+      <p id="fallbackText">Abre esta página en Chrome, toca los tres puntos y elige “Instalar aplicación” o “Agregar a pantalla principal”.</p>
+    </div>
+  </main>
+
+  <script>
+    let deferredPrompt = null;
+    const installBtn = document.querySelector('#installBtn');
+    const status = document.querySelector('#status');
+    const fallback = document.querySelector('#fallback');
+    const fallbackText = document.querySelector('#fallbackText');
+
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+    function showFallback() {
+      fallback.classList.remove('hidden');
+      installBtn.disabled = true;
+      installBtn.textContent = isIos ? 'Instalación desde Safari' : 'Instalación desde el navegador';
+      if (isIos) {
+        fallbackText.textContent = 'Abre esta página en Safari, toca Compartir y elige “Agregar a pantalla de inicio”.';
+      }
+    }
+
+    if (isStandalone) {
+      installBtn.textContent = 'La aplicación ya está instalada';
+      status.textContent = 'Puedes abrirla desde el ícono de Maíz en tu pantalla principal.';
+      status.classList.add('success');
+    } else if (isIos) {
+      showFallback();
+    } else {
+      setTimeout(() => {
+        if (!deferredPrompt) showFallback();
+      }, 2500);
+    }
+
+    window.addEventListener('beforeinstallprompt', event => {
+      event.preventDefault();
+      deferredPrompt = event;
+      installBtn.disabled = false;
+      installBtn.textContent = 'Instalar aplicación';
+      fallback.classList.add('hidden');
+      status.textContent = 'Toca el botón para instalarla en este teléfono.';
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) {
+        showFallback();
+        return;
+      }
+      installBtn.disabled = true;
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      if (choice.outcome === 'accepted') {
+        status.textContent = 'Instalación aceptada. Busca el ícono de Maíz en tu pantalla.';
+        status.classList.add('success');
+        installBtn.textContent = 'Instalando…';
+      } else {
+        installBtn.disabled = false;
+        installBtn.textContent = 'Instalar aplicación';
+        status.textContent = 'La instalación fue cancelada.';
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      installBtn.disabled = true;
+      installBtn.textContent = 'Aplicación instalada';
+      status.textContent = 'Listo. Ya puedes abrirla desde tu pantalla principal.';
+      status.classList.add('success');
+    });
+
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>
