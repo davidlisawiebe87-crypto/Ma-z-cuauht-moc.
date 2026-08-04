@@ -1,0 +1,12 @@
+{
+  "name": "Maíz Cuauhtémoc",
+  "short_name": "Maíz",
+  "description": "Maíz amarillo, dólar y clima para Cuauhtémoc, Chihuahua.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f7f3",
+  "theme_color": "#183b2b",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
