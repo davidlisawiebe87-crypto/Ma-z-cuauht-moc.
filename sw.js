@@ -1,4 +1,4 @@
-const CACHE = 'maiz-shell-v3';
+const CACHE = 'maiz-shell-v4';
 const SHELL = [
   '/',
   '/index.html',
