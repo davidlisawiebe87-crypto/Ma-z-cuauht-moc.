@@ -1,7 +1,7 @@
 const REFRESH_MS = 15 * 60 * 1000;
 const BUSHELS_PER_METRIC_TON = 39.36825;
 const API_PATH = '/.netlify/functions/dashboard';
-const DEFAULT_LOCAL_ADJUSTMENT_MXN_TON = 1700;
+const DEFAULT_LOCAL_ADJUSTMENT_MXN_TON = 1100;
 
 const els = {
   refreshBtn: document.querySelector('#refreshBtn'),
@@ -45,7 +45,7 @@ function demoData() {
   const day = 86400000;
   return {
     generatedAt: today.toISOString(),
-    corn: { priceUsdBu: 4.69, changePct: -0.74, date: today.toISOString(), source: 'Datos de demostración' },
+    corn: { contract: 'Diciembre 2026', contractCode: 'ZCZ26', priceUsdBu: 4.69, changePct: -0.74, date: today.toISOString(), priceType: 'delayed_quote', source: 'Datos de demostración' },
     fx: { rate: 17.32, date: today.toISOString().slice(0, 10), source: 'Frankfurter' },
     weather: {
       current: { temperature: 20.8, wind: 13, precipitation: 0, code: 2 },
@@ -135,7 +135,7 @@ function render(data) {
   renderWeather(data.weather);
   renderNews(data.news || []);
   const time = new Date(data.generatedAt || Date.now());
-  els.updatedAt.textContent = `Actualizado ${time.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`;
+  els.updatedAt.textContent = `Consulta ${time.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`;
 }
 
 function renderCorn(corn, fx) {
@@ -153,7 +153,8 @@ function renderCorn(corn, fx) {
   const change = Number(corn.changePct || 0);
   els.cornTrend.textContent = `${change >= 0 ? '▲' : '▼'} ${Math.abs(change).toFixed(2)}%`;
   els.cornTrend.className = `trend ${change > 0 ? 'up' : change < 0 ? 'down' : 'neutral'}`;
-  els.cornMeta.textContent = `${corn.source || 'Mercado'} · ${formatDate(corn.date)}`;
+  const cornLabel = corn.priceType === 'delayed_quote' ? 'Cotización retrasada' : 'Último dato disponible';
+  els.cornMeta.textContent = `${cornLabel} · ${formatDateTime(corn.date)} · ${corn.contractCode || 'ZCZ26'}`;
 
   if (fx?.rate) {
     currentChicagoMxnTon = corn.priceUsdBu * BUSHELS_PER_METRIC_TON * fx.rate;
@@ -186,7 +187,7 @@ function updateLocalEstimate() {
 function renderFx(fx) {
   if (!fx?.rate) return;
   els.fxRate.textContent = `$${Number(fx.rate).toFixed(4)}`;
-  els.fxMeta.textContent = `${fx.source || 'Referencia'} · ${formatDate(fx.date)}`;
+  els.fxMeta.textContent = `Referencia diaria · ${formatDate(fx.date)} · ${fx.source || 'Fuente'}`;
 }
 
 function renderWeather(weather) {
@@ -278,6 +279,19 @@ function formatDate(value) {
   return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
 }
 
+function formatDateTime(value) {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleString('es-MX', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Chihuahua'
+  });
+}
+
 function formatRelative(value) {
   const date = new Date(value);
   const diffHours = Math.round((Date.now() - date.getTime()) / 3600000);
@@ -299,8 +313,11 @@ function buildSummary() {
   const fx = latestData.fx;
   const weather = latestData.weather?.current;
   const parts = ['REPORTE DE MAÍZ AMARILLO — CUAUHTÉMOC'];
-  if (corn?.priceUsdBu) parts.push(`Maíz CBOT: $${corn.priceUsdBu.toFixed(2)} USD/bushel (${corn.changePct >= 0 ? '+' : ''}${Number(corn.changePct || 0).toFixed(2)}%).`);
-  if (fx?.rate) parts.push(`Dólar: $${Number(fx.rate).toFixed(4)} MXN.`);
+  if (corn?.priceUsdBu) {
+    const label = corn.priceType === 'delayed_quote' ? 'cotización retrasada' : 'último dato disponible';
+    parts.push(`Maíz CBOT diciembre 2026 (${label}, ${formatDateTime(corn.date)}): $${corn.priceUsdBu.toFixed(2)} USD/bushel (${corn.changePct >= 0 ? '+' : ''}${Number(corn.changePct || 0).toFixed(2)}%).`);
+  }
+  if (fx?.rate) parts.push(`Dólar, referencia diaria del ${formatDate(fx.date)}: $${Number(fx.rate).toFixed(4)} MXN.`);
   if (corn?.priceUsdBu && fx?.rate) {
     const mxnTon = corn.priceUsdBu * BUSHELS_PER_METRIC_TON * fx.rate;
     const adjustment = getLocalAdjustment();
