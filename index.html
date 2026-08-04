@@ -69,7 +69,7 @@
     <section class="section">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">CONTRATO DICIEMBRE 2026</p>
+          <p class="eyebrow">FUTURO CONTINUO CBOT</p>
           <h2>Gráfico del maíz amarillo</h2>
         </div>
         <span class="source-badge">CBOT</span>
@@ -83,7 +83,7 @@
           <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
           {
             "autosize": true,
-            "symbol": "CBOT:ZCZ2026",
+            "symbol": "CBOT:ZC1!",
             "interval": "D",
             "timezone": "America/Chihuahua",
             "theme": "light",
@@ -98,7 +98,7 @@
           </script>
         </div>
       </div>
-      <p class="fine-print">El gráfico puede mostrar datos retrasados. Es una referencia de mercado, no una oferta local de compra.</p>
+      <p class="fine-print">El gráfico muestra futuros de maíz CBOT y puede tener datos retrasados. Es una referencia de mercado, no una oferta local de compra.</p>
     </section>
 
     <section class="section">
@@ -108,14 +108,32 @@
           <h2>Conversión aproximada a pesos</h2>
         </div>
       </div>
-      <div class="conversion-grid">
-        <div>
+      <div class="price-comparison">
+        <div class="price-box">
           <span class="conversion-label">Chicago convertido</span>
           <strong id="mxnTon" class="conversion-value">—</strong>
           <span class="conversion-note">MXN por tonelada, antes de base, flete y margen</span>
         </div>
-        <button id="copyBtn" class="primary-button" type="button">Copiar resumen</button>
+
+        <div class="price-box local-price-box">
+          <span class="conversion-label">Estimado ya con ajuste local</span>
+          <strong id="localMxnTon" class="conversion-value">—</strong>
+          <span class="conversion-note">Incluye <strong id="localAdjustmentText">$1,700</strong> por tonelada de base, flete y margen</span>
+        </div>
       </div>
+
+      <div class="adjustment-panel">
+        <label for="localAdjustment">Ajuste estimado de base, flete y margen</label>
+        <div class="adjustment-control">
+          <span aria-hidden="true">$</span>
+          <input id="localAdjustment" type="number" inputmode="numeric" min="0" step="50" value="1700" aria-describedby="adjustmentHelp">
+          <span>MXN/t</span>
+        </div>
+        <p id="adjustmentHelp">Puedes cambiar esta cantidad cuando conozcas la base o el costo real. Se guarda en este teléfono.</p>
+      </div>
+
+      <button id="copyBtn" class="primary-button conversion-copy" type="button">Copiar resumen</button>
+      <p class="fine-print">El segundo valor es una estimación, no una oferta firme de compra.</p>
     </section>
 
     <section class="section">

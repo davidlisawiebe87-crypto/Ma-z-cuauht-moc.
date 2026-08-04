@@ -132,9 +132,18 @@ main { width: min(1120px, 100%); margin: 0 auto; padding: 1rem 1rem 3rem; }
 .tradingview-widget-copyright a { color: var(--muted); text-decoration: none; }
 .fine-print { margin: .75rem 0 0; color: var(--muted); font-size: .75rem; }
 
-.conversion-grid { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center; }
+.price-comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+.price-box { padding: 1rem; border: 1px solid var(--line); border-radius: 17px; background: #fbfcfb; }
+.local-price-box { border-color: #b8cebf; background: var(--brand-soft); }
 .conversion-label, .conversion-note { display: block; color: var(--muted); font-size: .8rem; }
 .conversion-value { display: block; margin: .3rem 0; font-size: clamp(1.6rem, 5vw, 2.3rem); }
+.adjustment-panel { margin-top: .85rem; padding: .9rem 1rem; border: 1px dashed #b8c6bc; border-radius: 16px; background: #fbfcfb; }
+.adjustment-panel label { display: block; margin-bottom: .5rem; font-size: .82rem; font-weight: 800; }
+.adjustment-control { display: grid; grid-template-columns: auto minmax(90px, 150px) auto; align-items: center; gap: .45rem; width: fit-content; max-width: 100%; }
+.adjustment-control input { width: 100%; min-width: 0; padding: .58rem .7rem; border: 1px solid var(--line); border-radius: 11px; color: var(--text); background: white; font: inherit; font-weight: 800; }
+.adjustment-control span { color: var(--muted); font-size: .82rem; font-weight: 700; }
+.adjustment-panel p { margin: .45rem 0 0; color: var(--muted); font-size: .74rem; }
+.conversion-copy { margin-top: .85rem; width: 100%; }
 .primary-button {
   min-height: 46px;
   padding: .75rem 1rem;
@@ -197,7 +206,7 @@ footer p { margin: .3rem 0; }
   .metric-note { grid-column: 2; align-self: end; text-align: right; max-width: 145px; }
   .forecast-grid { grid-template-columns: repeat(5, 118px); overflow-x: auto; padding-bottom: .25rem; scroll-snap-type: x proximity; }
   .forecast-day { scroll-snap-align: start; }
-  .conversion-grid { grid-template-columns: 1fr; }
+  .price-comparison { grid-template-columns: 1fr; }
   .primary-button { width: 100%; }
   .chart-shell { height: 360px; }
 }

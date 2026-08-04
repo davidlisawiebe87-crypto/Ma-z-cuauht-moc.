@@ -1,6 +1,7 @@
 const REFRESH_MS = 15 * 60 * 1000;
 const BUSHELS_PER_METRIC_TON = 39.36825;
 const API_PATH = '/.netlify/functions/dashboard';
+const DEFAULT_LOCAL_ADJUSTMENT_MXN_TON = 1700;
 
 const els = {
   refreshBtn: document.querySelector('#refreshBtn'),
@@ -16,6 +17,9 @@ const els = {
   weatherMeta: document.querySelector('#weatherMeta'),
   weatherIcon: document.querySelector('#weatherIcon'),
   mxnTon: document.querySelector('#mxnTon'),
+  localMxnTon: document.querySelector('#localMxnTon'),
+  localAdjustment: document.querySelector('#localAdjustment'),
+  localAdjustmentText: document.querySelector('#localAdjustmentText'),
   forecastGrid: document.querySelector('#forecastGrid'),
   newsList: document.querySelector('#newsList'),
   newsBadge: document.querySelector('#newsBadge'),
@@ -29,7 +33,12 @@ const els = {
 
 let latestData = null;
 let lastSuccessfulUpdate = 0;
+let currentChicagoMxnTon = null;
 const previousSeenAt = Number(localStorage.getItem('maiz-news-seen-at') || 0);
+const savedAdjustment = Number(localStorage.getItem('maiz-local-adjustment-mxn-ton'));
+els.localAdjustment.value = Number.isFinite(savedAdjustment) && savedAdjustment >= 0
+  ? String(savedAdjustment)
+  : String(DEFAULT_LOCAL_ADJUSTMENT_MXN_TON);
 
 function demoData() {
   const today = new Date();
@@ -135,7 +144,9 @@ function renderCorn(corn, fx) {
     els.cornTrend.textContent = 'CBOT';
     els.cornTrend.className = 'trend neutral';
     els.cornMeta.textContent = 'Cotización disponible en el gráfico';
+    currentChicagoMxnTon = null;
     els.mxnTon.textContent = '—';
+    els.localMxnTon.textContent = '—';
     return;
   }
   els.cornPrice.textContent = `$${corn.priceUsdBu.toFixed(2)}/bu`;
@@ -145,11 +156,31 @@ function renderCorn(corn, fx) {
   els.cornMeta.textContent = `${corn.source || 'Mercado'} · ${formatDate(corn.date)}`;
 
   if (fx?.rate) {
-    const mxnTon = corn.priceUsdBu * BUSHELS_PER_METRIC_TON * fx.rate;
-    els.mxnTon.textContent = new Intl.NumberFormat('es-MX', {
-      style: 'currency', currency: 'MXN', maximumFractionDigits: 0
-    }).format(mxnTon);
+    currentChicagoMxnTon = corn.priceUsdBu * BUSHELS_PER_METRIC_TON * fx.rate;
+    els.mxnTon.textContent = formatMxn(currentChicagoMxnTon);
+    updateLocalEstimate();
   }
+}
+
+function getLocalAdjustment() {
+  const value = Number(els.localAdjustment.value);
+  return Number.isFinite(value) && value >= 0 ? value : DEFAULT_LOCAL_ADJUSTMENT_MXN_TON;
+}
+
+function formatMxn(value) {
+  return new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
+    maximumFractionDigits: 0
+  }).format(value);
+}
+
+function updateLocalEstimate() {
+  const adjustment = getLocalAdjustment();
+  els.localAdjustmentText.textContent = formatMxn(adjustment);
+  els.localMxnTon.textContent = Number.isFinite(currentChicagoMxnTon)
+    ? formatMxn(currentChicagoMxnTon + adjustment)
+    : '—';
 }
 
 function renderFx(fx) {
@@ -272,7 +303,10 @@ function buildSummary() {
   if (fx?.rate) parts.push(`Dólar: $${Number(fx.rate).toFixed(4)} MXN.`);
   if (corn?.priceUsdBu && fx?.rate) {
     const mxnTon = corn.priceUsdBu * BUSHELS_PER_METRIC_TON * fx.rate;
+    const adjustment = getLocalAdjustment();
+    const localEstimate = mxnTon + adjustment;
     parts.push(`Valor Chicago convertido: aproximadamente $${Math.round(mxnTon).toLocaleString('es-MX')} MXN/t antes de base, flete y margen.`);
+    parts.push(`Estimado ya con ajuste local: aproximadamente $${Math.round(localEstimate).toLocaleString('es-MX')} MXN/t, usando $${Math.round(adjustment).toLocaleString('es-MX')} MXN/t de base, flete y margen.`);
   }
   if (weather) parts.push(`Clima actual: ${Math.round(weather.temperature)} °C, ${weatherInfo(weather.code).label.toLowerCase()}.`);
   const newCount = (latestData.news || []).filter(item => new Date(item.publishedAt).getTime() > previousSeenAt).length;
@@ -285,6 +319,11 @@ function showToast(message) {
   els.toast.classList.add('show');
   setTimeout(() => els.toast.classList.remove('show'), 2200);
 }
+
+els.localAdjustment.addEventListener('input', () => {
+  updateLocalEstimate();
+  localStorage.setItem('maiz-local-adjustment-mxn-ton', String(getLocalAdjustment()));
+});
 
 els.refreshBtn.addEventListener('click', () => loadData(true));
 els.copyBtn.addEventListener('click', async () => {
